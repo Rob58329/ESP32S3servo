@@ -13,8 +13,12 @@ s3servo::~s3servo() {
     detach();
 };
 
-void s3servo::detach() {
+void s3servo::detach() {   
+  #if (ESP_IDF_VERSION_MAJOR>=5)
+	 ledcDetach(_pin);
+  #else
     ledcDetachPin(_pin);
+  #endif
 };
 
 void s3servo::_setAngleRange(int min, int max){
@@ -28,6 +32,13 @@ void s3servo::_setPulseRange(int min, int max){
 
 int8_t s3servo::attach(int pin, int channel , int min_angle, int max_angle, int min_pulse, int max_pulse)
 {
+   #if (ESP_IDF_VERSION_MAJOR>=5)
+      _pin = pin; 
+      _channel = pin;
+      _setAngleRange(min_angle,max_angle);
+      _setPulseRange(min_pulse,max_pulse);
+      ledcAttach(_pin, 50,MAX_BIT_NUM); // added by rs
+   #else
     if(CHANNEL_MAX_NUM < channel || channel < 0){
         return -1;
     }
@@ -37,6 +48,7 @@ int8_t s3servo::attach(int pin, int channel , int min_angle, int max_angle, int 
     _setPulseRange(min_pulse,max_pulse);
     ledcSetup(channel, 50, MAX_BIT_NUM);
     ledcAttachPin(_pin, _channel);
+   #endif
     return 0;
 };
 
